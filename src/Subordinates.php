@@ -19,7 +19,7 @@ class Subordinates extends Table
 			$subordinates[$key] = $subordinate['subordinate_id'];
 		}
 
-		return json_encode($employee->where("id in (". implode(',', $subordinates) .")")->select('id, name, surname'));
+		return json_encode($employee->where("id")->in($subordinates)->select('id, name, surname'));
 	}
 
 	public function remove($id){

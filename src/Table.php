@@ -6,6 +6,7 @@ abstract class Table
     protected $table;
     protected $pdo;
 
+    protected $in;
     protected $limit;
     protected $where;
 
@@ -33,7 +34,7 @@ abstract class Table
 
     protected function select(string $string){
         $query = "
-            select ". $string ." from ". $this->table ."". $this->queryWhere() . $this->queryLimit() .";
+            select ". $string ." from ". $this->table ."". $this->queryWhere() . $this->queryIn() . $this->queryLimit() .";
 	    ";
 
         $stmnt = $this->pdo->prepare($query);
@@ -83,6 +84,10 @@ abstract class Table
         $this->limit = $limit;
         return $this;
     }
+    protected function in(array $in){
+        $this->in = $in;
+        return $this;
+    }
 
     public static function addForeignKey(Table $table, string $primaryKey, string $foreignKey): void {
         self::$relationships[$foreignKey] = [$table, $primaryKey];
@@ -98,6 +103,9 @@ abstract class Table
 
     private function queryLimit(){
         return !empty($this->limit) ? " limit ".$this->limit : '';
+    }
+    private function queryIn(){
+        return !empty($this->in) ? " in (". implode(',', $this->in) .")" : '';
     }
 
     private function insertArrayToString($values){
