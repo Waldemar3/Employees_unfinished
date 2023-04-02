@@ -16,7 +16,7 @@ class Employees extends Table
 	}
 
 	public function read($id){
-		return json_encode($this->select('*', 'where id='.$id));
+		return json_encode($this->where('id='.$id)->limit(1)->select('*'));
 	}
 
 	public function create(array $employee){
@@ -35,8 +35,12 @@ class Employees extends Table
 		]);
 	}
 
-	public function change(array $employee, int $id){
-		return $this->update([
+	public function change(array $employee, $id){
+		if(empty($employee)){
+            throw new \Exception("Тело запроса пустое");
+        }
+
+		return $this->where('id='.$id)->update([
 			'name' => $this->validateName($employee['name']),
 			'surname' => $this->validateName($employee['surname']),
 			'job' => $this->validateJob($employee['job']),
@@ -44,16 +48,16 @@ class Employees extends Table
 			'phone_number' => $this->validatePhoneNumber($employee['phone_number']),
 			'notes' => $this->validateNotes($employee['notes']),
 			'timestamp' => $this->timestamp,
-		], 'id='.$id);
+		]);
 	}
 
-	public function remove(int $id){
-		return $this->delete($id);
+	public function remove($id){
+		return $this->where('id='.$id)->delete();
 	}
 
 	public function findIdByNameAndSurname(string $name){
 		$name = explode(" ", $name);
-		return $this->select('id', "where name='".$this->validateName($name[0])."' and surname='".$this->validateName($name[1])."'");
+		return $this->where("name='".$this->validateName($name[0])."' and surname='".$this->validateName($name[1])."'")->select('id')[0]['id'];
 	}
 
 	private function validateName($name){

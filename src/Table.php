@@ -6,6 +6,9 @@ abstract class Table
     protected $table;
     protected $pdo;
 
+    protected $limit;
+    protected $where;
+
     protected static $relationships = [];
 
     function __construct(PDO $pdo) {
@@ -28,9 +31,9 @@ abstract class Table
         );
     }
 
-    protected function select(string $string, string $where = ''){
+    protected function select(string $string){
         $query = "
-            select ". $string ." from ". $this->table ." ". $where .";
+            select ". $string ." from ". $this->table ."". $this->queryWhere() . $this->queryLimit() .";
 	    ";
 
         $stmnt = $this->pdo->prepare($query);
@@ -52,9 +55,9 @@ abstract class Table
         return $this->pdo->lastInsertId();
     }
 
-    protected function update(array $values, string $where){
+    protected function update(array $values){
         $query = "
-            update ". $this->table ." set ". $this->updateArrayToMask($values) ." where ". $where ."
+            update ". $this->table ." set ". $this->updateArrayToMask($values) ."". $this->queryWhere() ."
 	    ";
         $stmnt = $this->pdo->prepare($query);
         $stmnt->execute($values);
@@ -62,9 +65,9 @@ abstract class Table
         return true;
     }
 
-    protected function delete(int $id){
+    protected function delete(){
         $query = "
-            delete from ". $this->table ." where id=". $id ."
+            delete from ". $this->table ."". $this->queryWhere() ."
         ";
         $stmnt = $this->pdo->prepare($query);
         $stmnt->execute($values);
@@ -72,8 +75,29 @@ abstract class Table
         return true;
     }
 
+    protected function where(string $where){
+        $this->where = $where;
+        return $this;
+    }
+    protected function limit(int $limit){
+        $this->limit = $limit;
+        return $this;
+    }
+
     public static function addForeignKey(Table $table, string $primaryKey, string $foreignKey): void {
         self::$relationships[$foreignKey] = [$table, $primaryKey];
+    }
+
+    protected function getTableById($id){
+        return self::$relationships[$id][0];
+    }
+
+    private function queryWhere(){
+        return !empty($this->where) ? " where ".$this->where : '';
+    }
+
+    private function queryLimit(){
+        return !empty($this->limit) ? " limit ".$this->limit : '';
     }
 
     private function insertArrayToString($values){

@@ -5,25 +5,25 @@ require_once 'Table.php';
 class Subordinates extends Table
 {
 	public function add($employeeId, $name){
-		$employee = self::$relationships['subordinate_id'][0];
+		$employee = $this->getTableById('subordinate_id');
 
-		$this->insert(['employee_id' => $employeeId, 'subordinate_id' => $employee->findIdByNameAndSurname($name)[0]['id']]);
+		$this->insert(['employee_id' => $employeeId, 'subordinate_id' => $employee->findIdByNameAndSurname($name)]);
 	}
 
 	public function read($employeeId){
-		$employee = self::$relationships['subordinate_id'][0];
+		$employee = $this->getTableById('subordinate_id');
 
-		$subordinates = $this->select('subordinate_id', "where employee_id=".$employeeId);
+		$subordinates = $this->where("employee_id=".$employeeId)->select('subordinate_id');
 
 		foreach($subordinates as $key => $subordinate){
 			$subordinates[$key] = $subordinate['subordinate_id'];
 		}
 
-		return $employee->select('*', "where id in (". implode(',', $subordinates) .")");
+		return json_encode($employee->where("id in (". implode(',', $subordinates) .")")->select('id, name, surname'));
 	}
 
 	public function remove($id){
-		return $this->delete($id);
+		return $this->where('subordinate_id='.$id)->delete();
 	}
 	
     protected function migrate(): string {
