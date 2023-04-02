@@ -15,6 +15,10 @@ class Subordinates extends Table
 
 		$subordinates = $this->where("employee_id=".$employeeId)->select('subordinate_id');
 
+		if(empty($subordinates)){
+			return false;
+		}
+
 		foreach($subordinates as $key => $subordinate){
 			$subordinates[$key] = $subordinate['subordinate_id'];
 		}
