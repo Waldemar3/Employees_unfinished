@@ -1,11 +1,13 @@
-<?php
-
-require_once 'Table.php';
+<?php namespace App;
 
 class Subordinates extends Table
 {
 	public function add($employeeId, $name){
 		$subordinate = $this->getTableById('subordinate_id')->findByNameAndSurname($name);
+
+		if($employeeId == $subordinate['id']){
+			throw new \Exception("Вы не можете добавить самого себя");
+		}
 
 		$query = "
 			insert into subordinates 
@@ -41,6 +43,12 @@ class Subordinates extends Table
 
 	public function remove($id){
 		return $this->where('subordinate_id='.$id)->delete();
+	}
+
+	public function fixture($ids, $employees){
+		for ($i = 0; $i < count($employees)*2; $i++) {
+			$this->add($ids[array_rand($ids)], $employees[array_rand($employees)]);
+		}
 	}
 	
     protected function migrate(): string {

@@ -1,4 +1,4 @@
-<?php
+<?php namespace App;
 
 abstract class Table
 {
@@ -12,11 +12,11 @@ abstract class Table
 
     protected static $relationships = [];
 
-    function __construct(PDO $pdo) {
+    function __construct(\PDO $pdo) {
 
         $this->pdo = $pdo;
 
-        $this->table = strtolower(static::class);
+        $this->table = strtolower(end(explode('\\', static::class)));
     	$this->timestamp = $_SERVER['REQUEST_TIME'];
 
         $relationships = "";
@@ -40,7 +40,7 @@ abstract class Table
         $stmnt = $this->pdo->prepare($query);
         $stmnt->execute($values);
 
-        return $stmnt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmnt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     protected function insert(array $values){

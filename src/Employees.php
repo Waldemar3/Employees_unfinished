@@ -1,6 +1,4 @@
-<?php
-
-require_once 'Table.php';
+<?php namespace App;
 
 class Employees extends Table
 {
@@ -95,6 +93,31 @@ class Employees extends Table
         }
         return $job;
     }
+
+	public function fixture($faker, $count){
+		$employees = [];
+		$ids = [];
+
+		for ($i = 0; $i < $count; $i++) {
+			$name = $faker->firstName;
+			$surname = $faker->lastName;
+
+			$id = $this->insert([
+				'name' => $name,
+				'surname' => $surname,
+				'job' => $faker->company,
+				'email' => $faker->email,
+				'phone_number' => $faker->phoneNumber,
+				'notes' => $faker->text(20),
+				'timestamp' => $this->timestamp,
+			]);
+
+			$ids[] = $id; 
+			$employees[] = $name ." ". $surname;
+		}
+
+		return [$ids, $employees];
+	}
 
     protected function migrate(): string {
 	    return "

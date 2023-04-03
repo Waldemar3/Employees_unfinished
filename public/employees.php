@@ -1,15 +1,14 @@
 <?php
 
 require_once 'db-connection.php';
-require_once '../src/Employees.php';
-require_once '../src/Subordinates.php';
+require_once '../vendor/autoload.php';
 
 try{
-    $employees = new Employees($pdo);
+    $employees = new \App\Employees($pdo);
 
-    Subordinates::addForeignKey($employees, 'id', 'employee_id');
-    Subordinates::addForeignKey($employees, 'id', 'subordinate_id');
-    $subordinates = new Subordinates($pdo);
+    \App\Subordinates::addForeignKey($employees, 'id', 'employee_id');
+    \App\Subordinates::addForeignKey($employees, 'id', 'subordinate_id');
+    $subordinates = new \App\Subordinates($pdo);
 
     $GET = function() use($employees, $subordinates) {
         if(!empty($_GET['id'])){
@@ -41,6 +40,9 @@ try{
         case 'GET': $request = $GET(); break;
         case 'POST': $request = $POST(); break;
     }
+
+    //$fixture = $employees->fixture(Faker\Factory::create(), 100);
+    //$subordinates->fixture($fixture[0], $fixture[1]);
 
     echo $request;
 }catch(\Exception $e){
