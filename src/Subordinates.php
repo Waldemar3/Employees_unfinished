@@ -5,9 +5,22 @@ require_once 'Table.php';
 class Subordinates extends Table
 {
 	public function add($employeeId, $name){
-		$employee = $this->getTableById('subordinate_id');
+		$subordinate = $this->getTableById('subordinate_id')->findByNameAndSurname($name);
 
-		$this->insert(['employee_id' => $employeeId, 'subordinate_id' => $employee->findIdByNameAndSurname($name)]);
+		$query = "
+			insert into subordinates 
+			(employee_id, subordinate_id) 
+			select :employee_id, :subordinate_id where not exists 
+			(select * from subordinates where employee_id=:subordinate_id and subordinate_id=:employee_id) limit 1
+		";
+        $stmnt = $this->pdo->prepare($query);
+        $stmnt->execute(['employee_id' => $employeeId, 'subordinate_id' => $subordinate['id']]);
+
+		if($stmnt->rowCount() == 0){
+			throw new \Exception("Данный пользователь уже находится в подчинении");
+		}
+
+		return json_encode($subordinate);
 	}
 
 	public function read($employeeId){
@@ -16,7 +29,7 @@ class Subordinates extends Table
 		$subordinates = $this->where("employee_id=".$employeeId)->select('subordinate_id');
 
 		if(empty($subordinates)){
-			return false;
+			return 0;
 		}
 
 		foreach($subordinates as $key => $subordinate){

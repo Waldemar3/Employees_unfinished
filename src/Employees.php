@@ -55,9 +55,9 @@ class Employees extends Table
 		return $this->where('id='.$id)->delete();
 	}
 
-	public function findIdByNameAndSurname(string $name){
+	public function findByNameAndSurname(string $name){
 		$name = explode(" ", $name);
-		return $this->where("name='".$this->validateName($name[0])."' and surname='".$this->validateName($name[1])."'")->select('id')[0]['id'];
+		return $this->where("name='".$this->validateName($name[0])."' and surname='".$this->validateName($name[1])."'")->select('*')[0];
 	}
 
 	private function validateName($name){

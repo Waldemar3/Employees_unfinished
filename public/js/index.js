@@ -11,13 +11,33 @@ function App(){
         }).then(async response => setEmployees(await response.json()));
     }, []);
 
-    function sendForm(){
+    function sendForm(id=null, method=null, entity='employee'){
         const body = new FormData(refForm.current);
-
+        if(method) body.append('method', method);
+        body.append('entity', entity);
+        if(id) body.append('id', id);
+ 
         fetch('/employees.php', {
             method: 'POST',
             body,
-        }).then(async response => !response.ok && alert(await response.text()));
+        }).then(async response => {
+            const text = await response.text();
+            if(!response.ok) return alert(text);
+
+            switch(method){
+                case 'update':
+                    alert('Пользователь упешно обновлен');
+                    break;
+                case 'delete': 
+                    setEmployees(employees.filter(e=>e.id!=id));
+                    break;
+                default: 
+                    let employee = {};
+                    body.append('id', text);
+                    body.forEach((value, key) => (employee[key] = value));
+                    setEmployees([employee, ...employees]);
+            }
+        });
     }
 
     function selectEmployee(id){
@@ -29,17 +49,19 @@ function App(){
 	return (
 		<Fragment>
             {activeEmployee ? (
-                <ActiveEmployee sendForm={sendForm} employee={activeEmployee}>
-                    <FormWithValues refForm={refForm} employee={activeEmployee} />
-                </ActiveEmployee>
+                <Fragment>
+                    <ActiveEmployee sendForm={sendForm} employee={activeEmployee}>
+                        <FormWithValues refForm={refForm} employee={activeEmployee} />
+                    </ActiveEmployee>
+                    <Subordinates employee={activeEmployee} />
+                </Fragment>
             ) : (
                 <Fragment>
-                    <header>
-                        <FormWithoutValues refForm={refForm} />
-                        <button onClick={sendForm}>Добавить</button>
-                    </header>
+                    <CreateEmployee sendForm={sendForm}>
+                        <Form refForm={refForm} />
+                    </CreateEmployee>
                     {employees ? (
-                        <Employees employees={employees} selectEmployee={selectEmployee} />
+                        <Employees employees={employees} selectEmployee={selectEmployee} sendForm={sendForm} />
                     ) : (
                         <div>
                             Загрузка...
@@ -63,7 +85,7 @@ function FormWithValues({refForm, employee: [ employee ]}){
         </form>
     )
 }
-function FormWithoutValues({refForm}){
+function Form({refForm}){
     return (
         <form ref={refForm}>
             <input name="name" type="text" placeholder="Имя" />
@@ -76,22 +98,98 @@ function FormWithoutValues({refForm}){
     )
 }
 
-function ActiveEmployee({children}){
+function CreateEmployee({children, sendForm}){
     return (
-        <Fragment>
+        <header>
             {children}
-            <button>Изменить</button>
-        </Fragment>
+            <button onClick={sendForm}>Добавить</button>
+        </header>
+    );
+}
+
+function ActiveEmployee({children, sendForm, employee: [ employee ]}){
+    return (
+        <header>
+            {children}
+            <button onClick={()=>sendForm(employee.id, 'update')}>Изменить</button>
+        </header>
     )
 }
 
-function Employees({employees, selectEmployee}){
+function Employees({employees, selectEmployee, sendForm}){
     return (
         <ul>
-            {employees.map(({id, name, surname}) => <li key={id} onClick={()=>selectEmployee(id)}>
-                Имя и фамилия: {name} {surname}
+            {employees.map(({id, name, surname}) => <li key={id}>
+                Имя и фамилия: {name} {surname} <div className="buttons"><button onClick={()=>selectEmployee(id)}>Информация</button><button onClick={()=>sendForm(id, 'delete')}>Удалить</button></div>
             </li>)}
         </ul>
+    )
+}
+
+function Subordinates({employee: [ employee ]}){
+    const refForm = useRef();
+    const [ subordinates, setSubordinates ] = useState(null);
+
+    useEffect(()=>{
+        const body = new FormData();
+        body.append('entity', 'subordinate');
+        body.append('method', 'read');
+        body.append('id', employee.id);
+
+        fetch('/employees.php', {
+            method: 'POST',
+            body,
+        }).then(async response => setSubordinates(await response.json()));
+    }, []);
+
+    function sendForm(id=null, method=null, entity='subordinate'){
+        const name = refForm.current.value;
+
+        const body = new FormData();
+        if(method) body.append('method', method);
+        body.append('entity', entity);
+        if(!!name) body.append('name', name);
+        if(id) body.append('id', id);
+ 
+        fetch('/employees.php', {
+            method: 'POST',
+            body,
+        }).then(async response => {
+            const text = await response.text();
+            if(!response.ok) return alert(text);
+
+            switch(method){
+                case 'delete': 
+                    setSubordinates(subordinates.filter(e=>e.id!=id));
+                    break;
+                default:
+                    setSubordinates([JSON.parse(text), ...subordinates]);
+            }
+        });
+    }
+
+    return (
+        <Fragment>
+            <br />
+            <input ref={refForm} name="name" type="text" placeholder="Введите имя работника" /><button onClick={()=>sendForm(employee.id, 'add')}>Добавить</button>
+            {subordinates ? (
+                <Fragment>
+                    <div>
+                        Подчиненные:
+                    </div>
+
+                    <ul>
+                        {subordinates.map(({id, name, surname}) => <li key={id}>
+                            Имя и фамилия: {name} {surname} <div className="buttons"><button onClick={()=>sendForm(id, 'delete')}>Удалить</button></div>
+                        </li>)}
+                    </ul>
+                </Fragment>
+            ) : (
+                <div>
+                    У данного работника нет подчиненных
+                </div>
+            )}
+        </Fragment>
     )
 }
 
