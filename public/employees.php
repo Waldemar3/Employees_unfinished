@@ -41,8 +41,8 @@ try{
         case 'POST': $request = $POST(); break;
     }
 
-    //$fixture = $employees->fixture(Faker\Factory::create(), 100);
-    //$subordinates->fixture($fixture[0], $fixture[1]);
+    //$factory = $employees->factory(Faker\Factory::create(), 50);
+    //$subordinates->factory($factory[0], $factory[1]);
 
     echo $request;
 }catch(\Exception $e){

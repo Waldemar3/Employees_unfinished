@@ -45,9 +45,15 @@ class Subordinates extends Table
 		return $this->where('subordinate_id='.$id)->delete();
 	}
 
-	public function fixture($ids, $employees){
-		for ($i = 0; $i < count($employees)*2; $i++) {
-			$this->add($ids[array_rand($ids)], $employees[array_rand($employees)]);
+	public function factory($ids, $employees){
+		foreach($ids as $id){
+			foreach($employees as $employee){
+				try{
+					$this->add($id, $employee);
+				}catch(\Exception $e){
+					continue;
+				}
+			}
 		}
 	}
 	

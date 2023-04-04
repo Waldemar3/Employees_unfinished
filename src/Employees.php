@@ -94,7 +94,7 @@ class Employees extends Table
         return $job;
     }
 
-	public function fixture($faker, $count){
+	public function factory($faker, $count){
 		$employees = [];
 		$ids = [];
 
