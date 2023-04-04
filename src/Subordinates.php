@@ -10,10 +10,10 @@ class Subordinates extends Table
 		}
 
 		$query = "
-			insert into subordinates 
+			insert into ". $this->table ."
 			(employee_id, subordinate_id) 
 			select :employee_id, :subordinate_id where not exists 
-			(select * from subordinates where employee_id=:subordinate_id and subordinate_id=:employee_id) limit 1
+			(select * from ". $this->table ." where employee_id=:subordinate_id and subordinate_id=:employee_id) limit 1
 		";
         $stmnt = $this->pdo->prepare($query);
         $stmnt->execute(['employee_id' => $employeeId, 'subordinate_id' => $subordinate['id']]);
@@ -26,19 +26,13 @@ class Subordinates extends Table
 	}
 
 	public function read($employeeId){
-		$employee = $this->getTableById('subordinate_id');
+		$query = "
+			select e.id, e.name, e.surname from employees as e join subordinates as s on e.id = s.subordinate_id where s.employee_id=:employee_id;
+		";
+        $stmnt = $this->pdo->prepare($query);
+        $stmnt->execute(['employee_id' => $employeeId]);
 
-		$subordinates = $this->where("employee_id=".$employeeId)->select('subordinate_id');
-
-		if(empty($subordinates)){
-			return 0;
-		}
-
-		foreach($subordinates as $key => $subordinate){
-			$subordinates[$key] = $subordinate['subordinate_id'];
-		}
-
-		return json_encode($employee->where("id")->in($subordinates)->select('id, name, surname'));
+		return json_encode($stmnt->fetchAll(\PDO::FETCH_ASSOC));
 	}
 
 	public function remove($id){
